@@ -2,39 +2,49 @@ const Parser = require('rss-parser');
 const parser = new Parser();
 
 const CACHE = {};
-const TTL = 5 * 60 * 1000;
+const TTL = 60 * 1000;
 
 const FEEDS = {
- telangana:'https://news.google.com/rss/search?q=Telangana+Telugu',
- ap:'https://news.google.com/rss/search?q=Andhra+Pradesh+Telugu',
- sports:'https://news.google.com/rss/search?q=Sports+Telugu'
+ telangana:'https://news.google.com/rss/search?q=Telangana+Telugu&hl=en-IN&gl=IN&ceid=IN:en',
+ ap:'https://news.google.com/rss/search?q=Andhra+Pradesh+Telugu&hl=en-IN&gl=IN&ceid=IN:en',
+ sports:'https://news.google.com/rss/search?q=Sports+Telugu&hl=en-IN&gl=IN&ceid=IN:en',
+ cinema:'https://news.google.com/rss/search?q=Tollywood&hl=en-IN&gl=IN&ceid=IN:en'
 };
 
-exports.handler = function(event, context, callback){
+exports.handler = async function(event){
 
- const cat = event.queryStringParameters.cat || 'telangana';
+ try{
 
- if(CACHE[cat] && Date.now() - CACHE[cat].time < TTL){
-  return callback(null,{
-   statusCode:200,
-   headers:{
-    'Access-Control-Allow-Origin':'*',
-    'Content-Type':'application/json'
-   },
-   body:JSON.stringify(CACHE[cat].data)
-  });
- }
+  const cat = event.queryStringParameters.cat || 'telangana';
 
- parser.parseURL(FEEDS[cat])
- .then(feed=>{
+  if(
+   CACHE[cat] &&
+   Date.now() - CACHE[cat].time < TTL
+  ){
+   return {
+    statusCode:200,
+    headers:{
+     'Access-Control-Allow-Origin':'*',
+     'Cache-Control':'no-store',
+     'Content-Type':'application/json'
+    },
+    body:JSON.stringify(CACHE[cat].data)
+   };
+  }
+
+  const feed = await parser.parseURL(FEEDS[cat]);
+
+  const items = feed.items.map(x=>({
+   title:x.title,
+   link:x.link,
+   pubDate:x.pubDate,
+   img:''
+  }));
 
   const data = {
    status:'ok',
-   items: feed.items.map(x=>({
-    title:x.title,
-    link:x.link,
-    pubDate:x.pubDate
-   }))
+   cat,
+   items
   };
 
   CACHE[cat] = {
@@ -42,21 +52,23 @@ exports.handler = function(event, context, callback){
    data
   };
 
-  callback(null,{
+  return {
    statusCode:200,
    headers:{
     'Access-Control-Allow-Origin':'*',
+    'Cache-Control':'no-store',
     'Content-Type':'application/json'
    },
    body:JSON.stringify(data)
-  });
+  };
 
- })
- .catch(err=>{
-  callback(null,{
+ }catch(err){
+
+  return {
    statusCode:500,
-   body:JSON.stringify({error:String(err)})
-  });
- });
-
+   body:JSON.stringify({
+    error:String(err)
+   })
+  };
+ }
 };
