@@ -1,0 +1,8 @@
+{
+  "name": "NewsNeta",
+  "short_name": "NewsNeta",
+  "display": "standalone",
+  "start_url": "/",
+  "theme_color": "#CC0000",
+  "background_color": "#ffffff"
+}

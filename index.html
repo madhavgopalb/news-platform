@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NewsNeta - తెలుగు జాతి గొంతుక</title>
+
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+
+<link rel="manifest" href="manifest.json">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Barlow+Condensed:wght@500;700&family=Noto+Sans+Telugu:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+ --red:#CC0000;
+ --navy:#1C2B5E;
+ --bg:#f5f5f5;
+ --ink:#111;
+}
+body{
+ margin:0;
+ background:var(--bg);
+ color:var(--ink);
+ font-family:'Noto Sans Telugu','Inter',sans-serif;
+}
+header{
+ position:sticky;
+ top:0;
+ z-index:1000;
+ background:#fff;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ padding:12px 16px;
+ border-bottom:3px dashed var(--red);
+}
+.logo{
+ display:flex;
+ align-items:center;
+ gap:12px;
+}
+.logo img{
+ width:52px;
+ height:52px;
+ border-radius:50%;
+}
+.search{
+ flex:1;
+ margin:0 20px;
+}
+.search input{
+ width:100%;
+ padding:12px;
+ border:none;
+ border-radius:30px;
+ background:#eee;
+}
+.actions button{
+ margin-left:8px;
+ padding:10px 14px;
+ border:none;
+ border-radius:10px;
+ cursor:pointer;
+}
+nav{
+ background:var(--red);
+ overflow:auto;
+ white-space:nowrap;
+}
+nav a{
+ color:white;
+ text-decoration:none;
+ display:inline-block;
+ padding:14px 18px;
+ font-weight:bold;
+}
+.ticker{
+ background:#111;
+ color:#fff;
+ padding:10px;
+}
+.layout{
+ display:grid;
+ grid-template-columns:1fr 320px;
+ gap:20px;
+ padding:20px;
+}
+.cards{
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:18px;
+}
+.card{
+ background:white;
+ border-radius:14px;
+ overflow:hidden;
+ box-shadow:0 2px 8px rgba(0,0,0,.1);
+}
+.card img{
+ width:100%;
+ height:200px;
+ object-fit:cover;
+}
+.card h3{
+ padding:10px;
+ font-size:18px;
+}
+.widget{
+ background:white;
+ padding:16px;
+ border-radius:12px;
+ margin-bottom:20px;
+}
+@media(max-width:900px){
+ .layout{
+  grid-template-columns:1fr;
+ }
+ .cards{
+  grid-template-columns:1fr;
+ }
+}
+</style>
+</head>
+<body>
+
+<header>
+<div class="logo">
+<img src="https://dummyimage.com/80x80/cc0000/ffffff&text=N">
+<div>
+<h2 style="margin:0">NewsNeta</h2>
+<small>తెలుగు జాతి గొంతుక</small>
+</div>
+</div>
+
+<div class="search">
+<input placeholder="వార్తలు వెతకండి...">
+</div>
+
+<div class="actions">
+<button style="background:red;color:white;">LIVE</button>
+<button onclick="toggleDark()">🌙</button>
+</div>
+</header>
+
+<nav>
+<a href="#">🏠 హోమ్</a>
+<a href="#">తెలంగాణ</a>
+<a href="#">ఆంధ్రప్రదేశ్</a>
+<a href="#">క్రీడలు</a>
+<a href="#">సినిమా</a>
+</nav>
+
+<div class="ticker">
+<marquee id="ticker">లైవ్ వార్తలు లోడ్ అవుతున్నాయి...</marquee>
+</div>
+
+<div class="layout">
+<main>
+
+<section>
+<h2>తెలంగాణ</h2>
+<div class="cards" id="telangana"></div>
+</section>
+
+<section>
+<h2>ఆంధ్రప్రదేశ్</h2>
+<div class="cards" id="ap"></div>
+</section>
+
+<section>
+<h2>క్రీడలు</h2>
+<div class="cards" id="sports"></div>
+</section>
+
+</main>
+
+<aside>
+<div class="widget" id="weather">Loading Weather...</div>
+</aside>
+</div>
+
+<script>
+
+async function weather(){
+ const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=17.3850&longitude=78.4867&current=temperature_2m');
+ const d = await r.json();
+ document.getElementById('weather').innerHTML =
+ '<h3>హైదరాబాద్ వాతావరణం</h3><h1>'+d.current.temperature_2m+'°C</h1>';
+}
+
+async function loadCat(cat){
+ try{
+  const r = await fetch('/api/news?cat='+cat);
+  const d = await r.json();
+
+  const box = document.getElementById(cat);
+
+  box.innerHTML='';
+
+  d.items.slice(0,6).forEach(x=>{
+   box.innerHTML += `
+   <div class="card">
+    <img src="https://picsum.photos/400/250?random=${Math.random()}">
+    <h3>${x.title}</h3>
+   </div>`;
+  });
+
+  document.getElementById('ticker').innerHTML =
+   d.items.map(x=>x.title).join(' 🔴 ');
+
+ }catch(e){
+  console.log(e);
+ }
+}
+
+function toggleDark(){
+ document.body.style.background =
+ document.body.style.background === 'black'
+ ? '#f5f5f5'
+ : 'black';
+}
+
+weather();
+
+['telangana','ap','sports'].forEach(loadCat);
+
+setInterval(()=>{
+ ['telangana','ap','sports'].forEach(loadCat);
+},300000);
+
+</script>
+
+</body>
+</html>
