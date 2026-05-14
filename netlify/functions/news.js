@@ -1,74 +1,67 @@
 const Parser = require('rss-parser');
+
 const parser = new Parser();
-
-const CACHE = {};
-const TTL = 60 * 1000;
-
-const FEEDS = {
- telangana:'https://news.google.com/rss/search?q=Telangana+Telugu&hl=en-IN&gl=IN&ceid=IN:en',
- ap:'https://news.google.com/rss/search?q=Andhra+Pradesh+Telugu&hl=en-IN&gl=IN&ceid=IN:en',
- sports:'https://news.google.com/rss/search?q=Sports+Telugu&hl=en-IN&gl=IN&ceid=IN:en',
- cinema:'https://news.google.com/rss/search?q=Tollywood&hl=en-IN&gl=IN&ceid=IN:en'
-};
 
 exports.handler = async function(event){
 
  try{
 
-  const cat = event.queryStringParameters.cat || 'telangana';
+  const cat =
+   event.queryStringParameters.cat || 'telangana';
 
-  if(
-   CACHE[cat] &&
-   Date.now() - CACHE[cat].time < TTL
-  ){
-   return {
-    statusCode:200,
-    headers:{
-     'Access-Control-Allow-Origin':'*',
-     'Cache-Control':'no-store',
-     'Content-Type':'application/json'
-    },
-    body:JSON.stringify(CACHE[cat].data)
-   };
-  }
+  const feeds = {
 
-  const feed = await parser.parseURL(FEEDS[cat]);
+   telangana:
+   'https://news.google.com/rss/search?q=Telangana+Telugu&hl=en-IN&gl=IN&ceid=IN:en',
 
-  const items = feed.items.map(x=>({
-   title:x.title,
-   link:x.link,
-   pubDate:x.pubDate,
-   img:''
-  }));
+   ap:
+   'https://news.google.com/rss/search?q=Andhra+Pradesh+Telugu&hl=en-IN&gl=IN&ceid=IN:en',
 
-  const data = {
-   status:'ok',
-   cat,
-   items
+   sports:
+   'https://news.google.com/rss/search?q=Sports+Telugu&hl=en-IN&gl=IN&ceid=IN:en',
+
+   cinema:
+   'https://news.google.com/rss/search?q=Tollywood&hl=en-IN&gl=IN&ceid=IN:en'
+
   };
 
-  CACHE[cat] = {
-   time:Date.now(),
-   data
-  };
+  const feed = await parser.parseURL(feeds[cat]);
 
   return {
+
    statusCode:200,
+
    headers:{
     'Access-Control-Allow-Origin':'*',
-    'Cache-Control':'no-store',
     'Content-Type':'application/json'
    },
-   body:JSON.stringify(data)
+
+   body:JSON.stringify({
+
+    items: feed.items.map(x=>({
+
+     title:x.title,
+     link:x.link,
+     pubDate:x.pubDate
+
+    }))
+
+   })
+
   };
 
  }catch(err){
 
   return {
+
    statusCode:500,
+
    body:JSON.stringify({
     error:String(err)
    })
+
   };
+
  }
+
 };
